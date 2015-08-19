@@ -43,7 +43,7 @@
  */
 class ORMDatatableBridge extends ORM {
 
-	private $cnt_query = false;
+    public $cnt_query = false;
 
     /**
      * @param  null|integer $id
@@ -51,19 +51,27 @@ class ORMDatatableBridge extends ORM {
      */
     public function get_datatable($options = array()) {
 
-    	$this->cnt_query = true;
-    	$cnt = parent::find_array();
-    	if (isset($cnt[0]['_dt_record_cnt'])) {
-    		$cnt = $cnt[0]['_dt_record_cnt'];
-    	} else {
-    		// @todo throw error
-    		$cnt = 0;
-    	}
+        $limit = $this->_limit;
+        $offset = $this->_offset;
+        $this->_limit = null;
+        $this->_offset = null;
+        $this->cnt_query = true;
 
-    	$this->cnt_query = false;
-    	$results = $this->_create_json(parent::find_array(), $cnt, $options);
+        $cnt = parent::find_array();
+        if (isset($cnt[0]['_dt_record_cnt'])) {
+            $cnt = $cnt[0]['_dt_record_cnt'];
+        } else {
+            // @todo throw error
+            $cnt = 0;
+        }
 
-    	return $results;
+        $this->_limit = $limit;
+        $this->_offset = $offset;
+        $this->cnt_query = false;
+
+        $results = $this->_create_json(parent::find_array(), $cnt, $options);
+
+        return $results;
 
     }
 
@@ -89,140 +97,140 @@ class ORMDatatableBridge extends ORM {
         $x = 0;
         foreach ($data as $row) {
 
-        	// lets see if we have a row id we are using
-        	if (isset($options['DT_RowId']['type'])) {
-        		if ($options['DT_RowId']['type'] == 'fixed') {
-            		// fixed keys will most likely not be used as they increment by the x
-            		// value of the loop, the ideal identifier would be dynamic
-        			if (isset($options['DT_RowId']['key'])) {
-        				$row['DT_RowId'] = $options['DT_RowId']['key'] . $x;
-        			} else {
-        				// @todo exception handler
-        			}
-        		} elseif ($options['DT_RowId']['type'] == 'dynamic') {
-        			// dynmaic keys increment by the value of the key and the value
-        			// or another identifier like an id column in the dataset
-        			if (isset($options['DT_RowId']['key'])) {
-        				if (isset($row[$options['DT_RowId']['key']])) {
-        					$row['DT_RowId'] = $row[$options['DT_RowId']['key']];
-        				} else {
-        					// @todo exception handler
-        				}
-        			}
-        		}
+            // lets see if we have a row id we are using
+            if (isset($options['DT_RowId']['type'])) {
+                if ($options['DT_RowId']['type'] == 'fixed') {
+                    // fixed keys will most likely not be used as they increment by the x
+                    // value of the loop, the ideal identifier would be dynamic
+                    if (isset($options['DT_RowId']['key'])) {
+                        $row['DT_RowId'] = $options['DT_RowId']['key'] . $x;
+                    } else {
+                        // @todo exception handler
+                    }
+                } elseif ($options['DT_RowId']['type'] == 'dynamic') {
+                    // dynmaic keys increment by the value of the key and the value
+                    // or another identifier like an id column in the dataset
+                    if (isset($options['DT_RowId']['key'])) {
+                        if (isset($row[$options['DT_RowId']['key']])) {
+                            $row['DT_RowId'] = $row[$options['DT_RowId']['key']];
+                        } else {
+                            // @todo exception handler
+                        }
+                    }
+                }
 
-        		if (isset($options['DT_RowId']['prepend'])) {
-            		if (!empty($row['DT_RowId'])) {
-            			$row['DT_RowId'] = $options['DT_RowId']['prepend'] . $row['DT_RowId'];
-            		}
-        		}
-
-
-        	}
-        	
-        	/**
-        	 * http://datatables.net/manual/server-side#Returned-data
-        	 * Add the data contained in the object to the row using the jQuery data() method to set the data, 
-        	 * which can also then be used for later retrieval (for example on a click event).
-        	 */
-        	if (isset($options['DT_RowData'])) {
-        		if (is_array($options['DT_RowData'])) {
-        			foreach ($options['DT_RowData'] as $key => $val) {
-
-        				// lets see if we are including row data via template
-        				$templated_vals = $this->getTemplatedValues($val);
-						foreach ($templated_vals as $t_val) {
-        					if (isset($row[$t_val])) {
-        						$val = str_replace('{{' . $t_val . '}}', $row[$t_val], $val);
-        					}
-        				}
-        				$row['DT_RowData'][$key] = $val;
-        			}
-        		}
-        	}
-
-        	/**
-        	 * the ability to add dynamic columns to the result set is very important
-        	 * for instance you may want a column called `actions` that has an edit or a delete button
-        	 * this module provides a very simple way to add these
-        	 */
-        	if (isset($options['dynamic_columns'])) {
-        		foreach ($options['dynamic_columns'] as $col) {
-        			if (isset($col['key']) && isset($col['column_template'])) {
-        				$templated_vals = $this->getTemplatedValues($col['column_template']);
-        				foreach ($templated_vals as $t_val) {
-        					if (isset($row[$t_val])) {
-        						$col['column_template'] = str_replace('{{' . $t_val . '}}', $row[$t_val], $col['column_template']);
-        					}
-        				}
-        				$row[$col['key']] = $col['column_template'];
-        			} else {
-        				// @todo exception handler
-        			}
-        		}
-        	}
+                if (isset($options['DT_RowId']['prepend'])) {
+                    if (!empty($row['DT_RowId'])) {
+                        $row['DT_RowId'] = $options['DT_RowId']['prepend'] . $row['DT_RowId'];
+                    }
+                }
 
 
-        	// the ability to wrap columns dyanamically with html
-        	if (isset($options['wrap_columns'])) {
-        		foreach ($options['wrap_columns'] as $col) {
-        			if (isset($col['key']) && isset($col['column_template'])) {
-        				$templated_vals = $this->getTemplatedValues($col['column_template']);
-        				foreach ($templated_vals as $t_val) {
-        					if (isset($row[$t_val])) {
-        						$col['column_template'] = str_replace('{{' . $t_val . '}}', $row[$t_val], $col['column_template']);
-        					} elseif ($t_val == 'column_data') {
-        						$col['column_template'] = str_replace('{{' . $t_val . '}}', $row[$col['key']], $col['column_template']);
-        					}
+            }
+            
+            /**
+             * http://datatables.net/manual/server-side#Returned-data
+             * Add the data contained in the object to the row using the jQuery data() method to set the data, 
+             * which can also then be used for later retrieval (for example on a click event).
+             */
+            if (isset($options['DT_RowData'])) {
+                if (is_array($options['DT_RowData'])) {
+                    foreach ($options['DT_RowData'] as $key => $val) {
 
-        				}
-        				$row[$col['key']] = $col['column_template'];
-        			} else {
-        				// @todo exception handler
-        			}
-        		}
-        	}
+                        // lets see if we are including row data via template
+                        $templated_vals = $this->getTemplatedValues($val);
+                        foreach ($templated_vals as $t_val) {
+                            if (isset($row[$t_val])) {
+                                $val = str_replace('{{' . $t_val . '}}', $row[$t_val], $val);
+                            }
+                        }
+                        $row['DT_RowData'][$key] = $val;
+                    }
+                }
+            }
 
-        	// ability to wrap an entire column with custom HTML
-        	if (isset($options['wrap_all']['columns'])) {
-        		$new_row = array();
-        		foreach ($row as $key => $val) {
-        			if ($key == 'DT_RowId' || $key == 'DT_RowData') {
-        				continue;
-        			}
-        			$new_row[$key] = str_replace('{{column_data}}', $val, $options['wrap_all']['columns']);
-        		}
-        		foreach ($new_row as $key => $val) {
-        			$row[$key] = $val;
-        		}
-        	}
+            /**
+             * the ability to add dynamic columns to the result set is very important
+             * for instance you may want a column called `actions` that has an edit or a delete button
+             * this module provides a very simple way to add these
+             */
+            if (isset($options['dynamic_columns'])) {
+                foreach ($options['dynamic_columns'] as $col) {
+                    if (isset($col['key']) && isset($col['column_template'])) {
+                        $templated_vals = $this->getTemplatedValues($col['column_template']);
+                        foreach ($templated_vals as $t_val) {
+                            if (isset($row[$t_val])) {
+                                $col['column_template'] = str_replace('{{' . $t_val . '}}', $row[$t_val], $col['column_template']);
+                            }
+                        }
+                        $row[$col['key']] = $col['column_template'];
+                    } else {
+                        // @todo exception handler
+                    }
+                }
+            }
 
-	        if (isset($options['hide_columns'])) {
-	        	foreach ($options['hide_columns'] as $hide_col) {
-	        		if (isset($row[$hide_col])) {
-	        			unset($row[$hide_col]);
-	        		}
-	        	}
-	        }
 
-	        array_push($json['data'], $row);
+            // the ability to wrap columns dyanamically with html
+            if (isset($options['wrap_columns'])) {
+                foreach ($options['wrap_columns'] as $col) {
+                    if (isset($col['key']) && isset($col['column_template'])) {
+                        $templated_vals = $this->getTemplatedValues($col['column_template']);
+                        foreach ($templated_vals as $t_val) {
+                            if (isset($row[$t_val])) {
+                                $col['column_template'] = str_replace('{{' . $t_val . '}}', $row[$t_val], $col['column_template']);
+                            } elseif ($t_val == 'column_data') {
+                                $col['column_template'] = str_replace('{{' . $t_val . '}}', $row[$col['key']], $col['column_template']);
+                            }
 
-        	$x = $x + 1;
+                        }
+                        $row[$col['key']] = $col['column_template'];
+                    } else {
+                        // @todo exception handler
+                    }
+                }
+            }
+
+            // ability to wrap an entire column with custom HTML
+            if (isset($options['wrap_all']['columns'])) {
+                $new_row = array();
+                foreach ($row as $key => $val) {
+                    if ($key == 'DT_RowId' || $key == 'DT_RowData') {
+                        continue;
+                    }
+                    $new_row[$key] = str_replace('{{column_data}}', $val, $options['wrap_all']['columns']);
+                }
+                foreach ($new_row as $key => $val) {
+                    $row[$key] = $val;
+                }
+            }
+
+            if (isset($options['hide_columns'])) {
+                foreach ($options['hide_columns'] as $hide_col) {
+                    if (isset($row[$hide_col])) {
+                        unset($row[$hide_col]);
+                    }
+                }
+            }
+
+            array_push($json['data'], $row);
+
+            $x = $x + 1;
         }
 
         if (isset($options['include_columns'])) {
-        	if (isset($json['data'][0])) {
-	        	$columns = array();
-	        	foreach ($json['data'][0] as $col => $val) {
-	        		$columns[]['data'] = $col;
-	        	}
-	        	if (!empty($columns)) {
-	        		$new_json = array();
-	        		$new_json['records'] = $json;
-	        		$new_json['columns'] = $columns;
-	        		$json = $new_json;
-	        	}
-        	}
+            if (isset($json['data'][0])) {
+                $columns = array();
+                foreach ($json['data'][0] as $col => $val) {
+                    $columns[]['data'] = $col;
+                }
+                if (!empty($columns)) {
+                    $new_json = array();
+                    $new_json['records'] = $json;
+                    $new_json['columns'] = $columns;
+                    $json = $new_json;
+                }
+            }
         }
         
         $json = json_encode($json);
@@ -234,38 +242,45 @@ class ORMDatatableBridge extends ORM {
      * Build the start of the SELECT statement
      */
     protected function _build_select_start() {
-    	if ($this->cnt_query) {
+        if (!$this->cnt_query) {
+            return parent::_build_select_start();
+        }
 
-	        $fragment = "SELECT COUNT(*) as `_dt_record_cnt` FROM " . $this->_quote_identifier($this->_table_name);
-
-	        if (!is_null($this->_table_alias)) {
-	            $fragment .= " " . $this->_quote_identifier($this->_table_alias);
-	        }
-	        return $fragment;
-    	} else {
-    		return parent::_build_select_start();
-    	}
-
+        // Build a COUNT query to get the record count for Datatable pagination
+        $fragment = "SELECT COUNT(*) as `_dt_record_cnt` FROM " . $this->_quote_identifier($this->_table_name);
+        if (!is_null($this->_table_alias)) {
+            $fragment .= " " . $this->_quote_identifier($this->_table_alias);
+        }
+        return $fragment;
+        
     }
 
     /**
-     * Build LIMIT
+     * Execute the SELECT query that has been built up by chaining methods
+     * on this class. Return an array of rows as associative arrays.
      */
-    protected function _build_limit() {
-    	if ($this->cnt_query) {
-    		return '';
-    	}
-   		parent::_build_limit();
-    }
+    protected function _run() {
 
-    /**
-     * Build OFFSET
-     */
-    protected function _build_offset() {
-    	if ($this->cnt_query) {
-    		return '';
-    	}
-   		parent::_build_offset();
+        // allow parent method to run
+        if (!$this->cnt_query) {
+            return parent::_run();
+        }
+        
+        // we are not caching the COUNT - @todo - implement caching
+        $query = $this->_build_select();
+    
+        parent::_execute($query, $this->_values, $this->_connection_name);
+        $statement = parent::get_last_statement();
+
+        $rows = array();
+        while ($row = $statement->fetch(PDO::FETCH_ASSOC)) {
+            $rows[] = $row;
+        }
+
+        // reset Idiorm bound values
+        $this->_values = array();        
+
+        return $rows;
     }
 
     /**
@@ -273,16 +288,16 @@ class ORMDatatableBridge extends ORM {
      * @return array
      */
     private function getTemplatedValues($str) {
-    	$templated_vals = array();
-    	// extract a list of strings between {{tags}}
-    	preg_match_all('/{{.*?}}/is', $str, $matches);
-    	$matches = $matches[0];
-    	foreach ($matches as $m) {
-    		$m = str_replace('{{', '', $m);
-    		$m = str_replace('}}', '', $m);
-    		$templated_vals[] = $m;
-    	}
-    	return $templated_vals;
+        $templated_vals = array();
+        // extract a list of strings between {{tags}}
+        preg_match_all('/{{.*?}}/is', $str, $matches);
+        $matches = $matches[0];
+        foreach ($matches as $m) {
+            $m = str_replace('{{', '', $m);
+            $m = str_replace('}}', '', $m);
+            $templated_vals[] = $m;
+        }
+        return $templated_vals;
     }
 
     /**
