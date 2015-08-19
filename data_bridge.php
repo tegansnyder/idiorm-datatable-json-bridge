@@ -182,8 +182,23 @@ class ORMDatatableBridge extends ORM {
         	$x = $x + 1;
         }
 
+        if (isset($options['include_columns'])) {
+        	if (isset($json['data'][0])) {
+	        	$columns = array();
+	        	foreach ($json['data'][0] as $col => $val) {
+	        		$columns[]['data'] = $col;
+	        	}
+	        	if (!empty($columns)) {
+	        		$new_json = array();
+	        		$new_json['records'] = $json;
+	        		$new_json['columns'] = $columns;
+	        		$json = $new_json;
+	        	}
+        	}
+        }
+        
         $json = json_encode($json);
-
+        
         return $json;
     }
 
