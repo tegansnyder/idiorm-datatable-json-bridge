@@ -176,8 +176,16 @@ class ORMDatatableBridge extends ORM {
         			$row[$key] = $val;
         		}
         	}
-        	
-        	array_push($json['data'], $row);
+
+	        if (isset($options['hide_columns'])) {
+	        	foreach ($options['hide_columns'] as $hide_col) {
+	        		if (isset($row[$hide_col])) {
+	        			unset($row[$hide_col]);
+	        		}
+	        	}
+	        }
+
+	        array_push($json['data'], $row);
 
         	$x = $x + 1;
         }
