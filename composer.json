@@ -1,0 +1,31 @@
+{
+    "name": "tegansnyder/idiorm-datatable-json-bridge",
+    "type": "library",
+    "description": "A bridge between the PHP Idiorm ORM and the popular Datatables javascript library.",
+    "keywords": ["idiorm", "datatables", "json"],
+    "homepage": "https://github.com/tegansnyder/idiorm-datatable-json-bridge",
+    "support": {
+        "issues": "https://github.com/tegansnyder/idiorm-datatable-json-bridge/issues",
+        "source": "https://github.com/tegansnyder/idiorm-datatable-json-bridge"
+    },
+    "authors": [
+        {
+            "name": "Tegan Snyder",
+            "email": "tsnyder@tegdesign.com",
+            "homepage": "http://www.tegdesign.com",
+            "role": "Maintainer"
+        }
+    ],
+    "license": [
+        "BSD-2-Clause",
+        "BSD-3-Clause",
+        "BSD-4-Clause"
+    ],
+    "require": {
+        "php": ">=5.2.0",
+        "j4mie/idiorm": "1.5.1"
+    },
+    "autoload": {
+        "classmap": ["data_bridge.php"]
+    }
+}
