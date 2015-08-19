@@ -239,20 +239,40 @@ class ORMDatatableBridge extends ORM {
     }
 
     /**
-     * Build the start of the SELECT statement
+     * Build a SELECT statement based on the clauses that have
+     * been passed to this instance by chaining method calls.
      */
-    protected function _build_select_start() {
+    protected function _build_select() {
+
         if (!$this->cnt_query) {
-            return parent::_build_select_start();
+            return parent::_build_select();
         }
 
-        // Build a COUNT query to get the record count for Datatable pagination
-        $fragment = "SELECT COUNT(*) as `_dt_record_cnt` FROM " . $this->_quote_identifier($this->_table_name);
-        if (!is_null($this->_table_alias)) {
-            $fragment .= " " . $this->_quote_identifier($this->_table_alias);
+        // If the query is raw, just set the $this->_values to be
+        // the raw query parameters and return the raw query
+        if ($this->_is_raw_query) {
+            $this->_values = $this->_raw_parameters;
+            $query = $this->_raw_query;
+
+            $query = "SELECT COUNT(*) as _dt_record_cnt FROM (" . $query . ") dt_bridge_cnt";
+            return $query;
         }
-        return $fragment;
-        
+
+        // Build and return the full SELECT statement by concatenating
+        // the results of calling each separate builder method.
+        $query = $this->_join_if_not_empty(" ", array(
+            $this->_build_select_start(),
+            $this->_build_join(),
+            $this->_build_where(),
+            $this->_build_group_by(),
+            $this->_build_having(),
+            $this->_build_order_by(),
+            $this->_build_limit(),
+            $this->_build_offset(),
+        ));
+
+        $query = "SELECT COUNT(*) as _dt_record_cnt FROM (" . $query . ") dt_bridge_cnt";
+        return $query;
     }
 
     /**
@@ -265,20 +285,19 @@ class ORMDatatableBridge extends ORM {
         if (!$this->cnt_query) {
             return parent::_run();
         }
-        
+
         // we are not caching the COUNT - @todo - implement caching
         $query = $this->_build_select();
     
         parent::_execute($query, $this->_values, $this->_connection_name);
         $statement = parent::get_last_statement();
-
         $rows = array();
         while ($row = $statement->fetch(PDO::FETCH_ASSOC)) {
             $rows[] = $row;
         }
 
         // reset Idiorm bound values
-        $this->_values = array();        
+        $this->_values = array();    
 
         return $rows;
     }
