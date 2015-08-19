@@ -10,8 +10,13 @@
  *
  * BSD Licensed.
  *
- * Copyright (c) 2015, Tegan Snyder
- * All rights reserved.
+ * ORMDatatableBridge notice:
+ *   Copyright (c) 2015, Tegan Snyder
+ *   All rights reserved.
+ *
+ * Idiorm notice:
+ *   Copyright (c) 2010, Jamie Matthews
+ *   All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
@@ -38,13 +43,28 @@
  */
 class ORMDatatableBridge extends ORM {
 
+	private $cnt_query = false;
+
     /**
      * @param  null|integer $id
      * @return Model
      */
     public function get_datatable($options = array()) {
-    	$results = $this->_create_json(parent::find_array(), $options);
+
+    	$this->cnt_query = true;
+    	$cnt = parent::find_array();
+    	if (isset($cnt[0]['_dt_record_cnt'])) {
+    		$cnt = $cnt[0]['_dt_record_cnt'];
+    	} else {
+    		// @todo throw error
+    		$cnt = 0;
+    	}
+
+    	$this->cnt_query = false;
+    	$results = $this->_create_json(parent::find_array(), $cnt, $options);
+
     	return $results;
+
     }
 
     /**
@@ -56,14 +76,14 @@ class ORMDatatableBridge extends ORM {
      * @param  array $options
      * @return string
      */
-    protected function _create_json($data, $options) {
+    protected function _create_json($data, $cnt, $options) {
         if ($data === false) {
             return false;
         }
 
         $json = array();
-        $json['recordsTotal'] = count($data);
-        $json['recordsFiltered'] = count($data);
+        $json['recordsTotal'] = $cnt;
+        $json['recordsFiltered'] = $cnt;
         $json['data'] = array();
 
         $x = 0;
@@ -208,6 +228,44 @@ class ORMDatatableBridge extends ORM {
         $json = json_encode($json);
         
         return $json;
+    }
+
+    /**
+     * Build the start of the SELECT statement
+     */
+    protected function _build_select_start() {
+    	if ($this->cnt_query) {
+
+	        $fragment = "SELECT COUNT(*) as `_dt_record_cnt` FROM " . $this->_quote_identifier($this->_table_name);
+
+	        if (!is_null($this->_table_alias)) {
+	            $fragment .= " " . $this->_quote_identifier($this->_table_alias);
+	        }
+	        return $fragment;
+    	} else {
+    		return parent::_build_select_start();
+    	}
+
+    }
+
+    /**
+     * Build LIMIT
+     */
+    protected function _build_limit() {
+    	if ($this->cnt_query) {
+    		return '';
+    	}
+   		parent::_build_limit();
+    }
+
+    /**
+     * Build OFFSET
+     */
+    protected function _build_offset() {
+    	if ($this->cnt_query) {
+    		return '';
+    	}
+   		parent::_build_offset();
     }
 
     /**
