@@ -230,7 +230,9 @@ class ORMDatatableBridge extends ORM {
                 }
             }
 
-            $row = $new_row;
+            if (!empty($new_row)) {
+                $row = $new_row;
+            }
 
             array_push($json['data'], $row);
 
