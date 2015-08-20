@@ -141,7 +141,7 @@ $datatable_json = ORMDatatableBridge::for_table('products')
 			)
 		),
 		'wrap_all' => array(
-			'columns' => '<section class="datatable-column">{{column_data}}</section>'
+            'columns' => '<section class="datatable-column {{col_name}}">{{column_data}}</section>'
 		)
 	)
 );

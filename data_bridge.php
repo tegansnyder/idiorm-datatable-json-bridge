@@ -199,6 +199,7 @@ class ORMDatatableBridge extends ORM {
                         continue;
                     }
                     $new_row[$key] = str_replace('{{column_data}}', $val, $options['wrap_all']['columns']);
+                    $new_row[$key] = str_replace('{{col_name}}', $key, $new_row[$key]);
                 }
                 foreach ($new_row as $key => $val) {
                     $row[$key] = $val;
