@@ -169,6 +169,105 @@ Returns:
 }
 ```
 
+##### Additional Options:
+Many times the columns from your result set you may not want to actually use on your frontend. You can elect to hide these columns from the JSON output. In the backend database query they can still be selected, and used in templating, but just not included as a column in the JSON output. Here is an example:
+
+```php
+$datatable_json = ORMDatatableBridge::for_table('products')
+->select(
+    array(
+        'name', 
+        'id',
+        'price'
+    )
+)
+->get_datatable(
+    array(
+        'hide_columns' => array(
+            'id'
+        )
+    )
+);
+```
+
+Note in the above example I included a parameter called `hide_column` and set a value to `id`. I can still template off this value (example below):
+
+```php
+$datatable_json = ORMDatatableBridge::for_table('products')
+->select(
+    array(
+        'name', 
+        'id',
+        'price'
+    )
+)
+->get_datatable(
+    array(
+        'hide_columns' => array(
+            'id'
+        ),
+        'wrap_columns' => array(
+            array(
+                'key' => 'id',
+                'column_template' => '<a href="/product/view/{{id}}" target="_self">{{name}}</a>'
+            )
+        ),
+    )
+);
+```
+
+##### Getting Column Names
+
+If you want to grab a list of the column names to be used in marking up the HTML head of your table you can do another query to obtaining them by issuing the `just_columns` parameter. Note you can still supply the `hide_columns` parameter.
+
+```php
+$datatable_json = ORMDatatableBridge::for_table('products')
+->select(
+    array(
+        'name', 
+        'id',
+        'price'
+    )
+)
+->get_datatable(
+    array(
+        'hide_columns' => array(
+            'id'
+        ),
+        'just_columns' => true
+    )
+);
+```
+
+##### Renaming Column Names
+
+If you find yourself auto populating the HTML table head by grabbing a list of the column names from the above query, you may also want to rename some of the column names for display purposes. For instance you may have a column in the database called `store_price` that you want to look like `Store Price` on the table head. To do this see the example below:
+
+```php
+$datatable_json = ORMDatatableBridge::for_table('products')
+->select(
+    array(
+        'name', 
+        'id',
+        'store_price'
+    )
+)
+->get_datatable(
+    array(
+        'column_display_names' => array(
+            'name' => 'Name',
+            'store_price' => 'Store Price'
+        )
+    )
+);
+```
+
+
+##### Record Count:
+
+In order to supply Datatables with the appropriate record count it needs to calculate the pagination this library includes some options for controling the record used for obtaining a count. To obtain this count it overrides the Idiorm `_build_select` method and does an intial COUNT query by wrapping your provided query in a `SELECT COUNT(*)` statement and removing any imposed LIMITS and OFFSETS from your query to get the full record count. It then uses this result to populate the `recordsTotal` portion of the JSON. I couldn't think a better way to do this, but I'm open to suggestions.
+
+
 ---------------
 
 ### Contributing
@@ -180,6 +279,8 @@ I'm happy to accept PR's that add additional functionality and fix bugs. I will 
 ### Links
 
 [DataTables](https://datatables.net)
+
 [Idorim](https://github.com/j4mie/idiorm)
+
 
 Thanks to all the contributors of both projects!

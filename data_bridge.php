@@ -213,6 +213,25 @@ class ORMDatatableBridge extends ORM {
                 }
             }
 
+            // ability to rename columns for display purposes, note this happens after all processing
+            $new_row = array();
+            if (isset($options['column_display_names'])) {
+                foreach ($row as $row_name => $v) {
+                    $row_renamed = false;
+                    foreach ($options['column_display_names'] as $orig_col_name => $col_rename_to) {
+                        if ($row_name == $orig_col_name) {
+                            $row_renamed = true;
+                            $new_row[$col_rename_to] = $v;
+                        }
+                    }
+                    if (!$row_renamed) {
+                        $new_row[$row_name] = $v;
+                    }
+                }
+            }
+
+            $row = $new_row;
+
             array_push($json['data'], $row);
 
             $x = $x + 1;
