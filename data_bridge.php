@@ -229,10 +229,30 @@ class ORMDatatableBridge extends ORM {
                         $new_row[$row_name] = $v;
                     }
                 }
+                if (!empty($new_row)) {
+                    $row = $new_row;
+                }
             }
 
-            if (!empty($new_row)) {
-                $row = $new_row;
+            // ability to reorder array keys to new positions
+            // note if the column display names option is used above then you must use the new names
+            // given to the columns
+            $new_row = array();
+            $old_row = $row;
+            if (isset($options['column_order'])) {
+                foreach ($options['column_order'] as $reordered_column) {
+                    foreach ($row as $row_name => $v) {
+                        if ($row_name == $reordered_column) {
+                            $new_row[$reordered_column] = $v;
+                            unset($old_row[$row_name]);
+                        }
+                    }
+                }
+                if (!empty($new_row)) {
+                    $new_row = array_merge($new_row, $old_row);
+                    $row = $new_row;
+                    
+                }
             }
 
             array_push($json['data'], $row);
