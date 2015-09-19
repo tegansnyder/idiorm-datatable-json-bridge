@@ -262,6 +262,30 @@ $datatable_json = ORMDatatableBridge::for_table('products')
 );
 ```
 
+##### Reordering Columns
+
+If you need to reorder the output of a select statement you can by using the `column_order` option. Please note if you have previously used the `column_display_names` option to rename columns you must use the new names when reordering. Example of reordering below:
+
+```php
+$datatable_json = ORMDatatableBridge::for_table('products')
+->select(
+    array(
+        'name', 
+        'id',
+        'store_price'
+    )
+)
+->get_datatable(
+    array(
+        'column_order' => array(
+            'store_price',
+            'id',
+            'name'
+        )
+    )
+);
+```
+
 
 ##### Record Count:
 
