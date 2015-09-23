@@ -206,14 +206,6 @@ class ORMDatatableBridge extends ORM {
                 }
             }
 
-            if (isset($options['hide_columns'])) {
-                foreach ($options['hide_columns'] as $hide_col) {
-                    if (isset($row[$hide_col])) {
-                        unset($row[$hide_col]);
-                    }
-                }
-            }
-
             // ability to rename columns for display purposes, note this happens after all processing
             $new_row = array();
             if (isset($options['column_display_names'])) {
@@ -252,6 +244,17 @@ class ORMDatatableBridge extends ORM {
                     $new_row = array_merge($new_row, $old_row);
                     $row = $new_row;
                     
+                }
+            }
+
+            // hide any colums
+            if (isset($options['hide_columns'])) {
+                foreach ($options['hide_columns'] as $hide_col) {
+                    foreach ($row as $row_name => $v) {
+                        if ($row_name == $hide_col) {
+                            unset($row[$hide_col]);
+                        }
+                    }
                 }
             }
 
