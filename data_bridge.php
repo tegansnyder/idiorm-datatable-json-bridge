@@ -299,7 +299,17 @@ class ORMDatatableBridge extends ORM {
             $this->_values = $this->_raw_parameters;
             $query = $this->_raw_query;
 
+            if (is_array($this->_values)) {
+                foreach ($this->_values as $k => $v) {
+                    if (!is_numeric($v)) {
+                        $v = '"' . $v . '"'; 
+                    }
+                    $query = str_replace(':' . $k, $v, $query);
+                } 
+            }
+
             $query = "SELECT COUNT(*) as _dt_record_cnt FROM (" . $query . ") dt_bridge_cnt";
+
             return $query;
         }
 
@@ -328,6 +338,21 @@ class ORMDatatableBridge extends ORM {
 
         // allow parent method to run
         if (!$this->cnt_query) {
+
+            // need a way to make sure this is set
+            if ($this->_is_raw_query) {
+
+                if (is_array($this->_raw_parameters)) {
+                    foreach ($this->_raw_parameters as $k => $v) {
+                        if (!is_numeric($v)) {
+                            $v = '"' . $v . '"'; 
+                        }
+                        $this->_raw_query = str_replace(':' . $k, $v, $this->_raw_query);
+                    } 
+                }
+
+            }
+
             return parent::_run();
         }
 
