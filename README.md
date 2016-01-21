@@ -22,10 +22,12 @@ Here is a very simple example showing you can use the same Idorim features you h
 
 ```php
 $datatable_json = ORMDatatableBridge::for_table('products')
-->where(array(
-    'name'	=> 'Test Product 1',
-    'price'	=> 23
-))
+->where(
+    [
+        'name'	=> 'Test Product 1',
+        'price'	=> 23
+    ]
+)
 ->get_datatable();
 
 echo $datatable_json;
@@ -52,16 +54,16 @@ Hidden data and ID columns can be set to access the data in JQuery later. Refere
 ```php
 $datatable_json = ORMDatatableBridge::for_table('products')
 ->get_datatable(
-	array(
-		'DT_RowId' => array(
+	[
+		'DT_RowId' => [
 			'type' => 'dynamic',
 			'key'  => 'products_'
-		),
-		'DT_RowData' => array(
+		],
+		'DT_RowData' => [
 			'weight' => 'total_weight_{{weight}}',
 			'price'  => '{{price}}'
-		)
-	)
+		]
+	]
 );
 ```
 Returns:
@@ -111,39 +113,39 @@ If you are like me you will find yourself needing to wrap columns of data in cus
 $datatable_json = ORMDatatableBridge::for_table('products')
 ->where('id', 1)
 ->get_datatable(
-	array(
-		'DT_RowId' => array(
+	[
+		'DT_RowId' => [
 			'type' => 'dynamic',
 			'key'  => 'id',
 			'prepend' => 'id_'
-		),
-		'DT_RowData' => array(
+		],
+		'DT_RowData' => [
 			'weight' => 'ship_weight_{{weight}}'
-		),
-		'dynamic_columns' => array(
-			array(
+		],
+		'dynamic_columns' => [
+			[
 				'key' => 'edit',
 				'column_template' => '<a href="edit.php?id={id}}">Edit</a>'
-			),
-			array(
+			],
+			[
 				'key' => 'delete',
 				'column_template' => '<a href="/delete.php?id={{id}}">Delete</a>'
-			)
-		),
-		'wrap_columns' => array(
-			array(
+			]
+		],
+		'wrap_columns' => [
+			[
 				'key' => 'id',
 				'column_template' => '<a href="/view.php?id={{id}}">{{id}}</a>'
-			),
-			array(
+			],
+			[
 				'key' => 'name',
 				'column_template' => '<a href="/view.php?id={{id}}">{{name}}</a>'
-			)
-		),
-		'wrap_all' => array(
+			]
+		],
+		'wrap_all' => [
             'columns' => '<section class="datatable-column {{col_name}}">{{column_data}}</section>'
-		)
-	)
+		]
+	]
 );
 ```
 
@@ -175,18 +177,18 @@ Many times the columns from your result set you may not want to actually use on 
 ```php
 $datatable_json = ORMDatatableBridge::for_table('products')
 ->select(
-    array(
+    [
         'name', 
         'id',
         'price'
-    )
+    ]
 )
 ->get_datatable(
-    array(
-        'hide_columns' => array(
+    [
+        'hide_columns' => [
             'id'
-        )
-    )
+        ]
+    ]
 );
 ```
 
@@ -195,24 +197,24 @@ Note in the above example I included a parameter called `hide_column` and set a 
 ```php
 $datatable_json = ORMDatatableBridge::for_table('products')
 ->select(
-    array(
+    [
         'name', 
         'id',
         'price'
-    )
+    ]
 )
 ->get_datatable(
-    array(
-        'hide_columns' => array(
+    [
+        'hide_columns' => [
             'id'
-        ),
-        'wrap_columns' => array(
-            array(
+        ],
+        'wrap_columns' => [
+            [
                 'key' => 'id',
                 'column_template' => '<a href="/product/view/{{id}}" target="_self">{{name}}</a>'
-            )
-        ),
-    )
+            ]
+        ],
+    ]
 );
 ```
 
@@ -223,19 +225,19 @@ If you want to grab a list of the column names to be used in marking up the HTML
 ```php
 $datatable_json = ORMDatatableBridge::for_table('products')
 ->select(
-    array(
+    [
         'name', 
         'id',
         'price'
-    )
+    ]
 )
 ->get_datatable(
-    array(
-        'hide_columns' => array(
+    [
+        'hide_columns' => [
             'id'
-        ),
+        ],
         'just_columns' => true
-    )
+    ]
 );
 ```
 
@@ -246,19 +248,19 @@ If you find yourself auto populating the HTML table head by grabbing a list of t
 ```php
 $datatable_json = ORMDatatableBridge::for_table('products')
 ->select(
-    array(
+    [
         'name', 
         'id',
         'store_price'
-    )
+    ]
 )
 ->get_datatable(
-    array(
-        'column_display_names' => array(
+    [
+        'column_display_names' => [
             'name' => 'Name',
             'store_price' => 'Store Price'
-        )
-    )
+        ]
+    ]
 );
 ```
 
@@ -269,27 +271,27 @@ If you need to reorder the output of a select statement you can by using the `co
 ```php
 $datatable_json = ORMDatatableBridge::for_table('products')
 ->select(
-    array(
+    [
         'name', 
         'id',
         'store_price'
-    )
+    ]
 )
 ->get_datatable(
-    array(
-        'column_order' => array(
+    [
+        'column_order' => [
             'store_price',
             'id',
             'name'
-        )
-    )
+        ]
+    ]
 );
 ```
 
 
 ##### Record Count:
 
-In order to supply Datatables with the appropriate record count it needs to calculate the pagination this library includes some options for controling the record used for obtaining a count. To obtain this count it overrides the Idiorm `_build_select` method and does an intial COUNT query by wrapping your provided query in a `SELECT COUNT(*)` statement and removing any imposed LIMITS and OFFSETS from your query to get the full record count. It then uses this result to populate the `recordsTotal` portion of the JSON. I couldn't think a better way to do this, but I'm open to suggestions.
+In order to supply Datatables with the appropriate record count it needs to calculate the pagination this library includes some options for controling the record used for obtaining a count. To obtain this count it overrides the Idiorm `_build_select` method and does an intial COUNT query by wrapping your provided query in a `SELECT COUNT(*)` statement and removing any imposed LIMITS and OFFSETS from your query to get the full record count. It then uses this result to populate the `recordsTotal` portion of the JSON. I couldn't think a better way to do this, but I'm open to suggestions. For idorim raw queries this library expects you to name the query paramater bindings you pass to the `raw_query` method as 'LIMIT :limit' and 'OFFSET :offset' respectively.
 
 
 ---------------
