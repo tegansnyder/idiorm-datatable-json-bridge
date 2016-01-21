@@ -11,7 +11,7 @@
  * BSD Licensed.
  *
  * ORMDatatableBridge notice:
- *   Copyright (c) 2015, Tegan Snyder
+ *   Copyright (c) 2016, Tegan Snyder
  *   All rights reserved.
  *
  * Idiorm notice:
@@ -284,8 +284,8 @@ class ORMDatatableBridge extends ORM {
     }
 
     /**
-     * Build a SELECT statement based on the clauses that have
-     * been passed to this instance by chaining method calls.
+     * This function only produces the COUNT query wrapped in `_dt_record_cnt`
+     * The parent function produces the main select queries
      */
     protected function _build_select() {
 
@@ -293,17 +293,32 @@ class ORMDatatableBridge extends ORM {
             return parent::_build_select();
         }
 
-        // If the query is raw, just set the $this->_values to be
-        // the raw query parameters and return the raw query
+        // If the query is raw we need to remove the LIMIT and OFFSET and
+        // replace the param values before proceeding.
         if ($this->_is_raw_query) {
             $this->_values = $this->_raw_parameters;
             $query = $this->_raw_query;
 
+            $new_vals = array();
+
             if (is_array($this->_values)) {
                 foreach ($this->_values as $k => $v) {
+
+                    // @todo find a better way to do this for raw_queries
+                    if ($k == 'limit') {
+                        $query = str_ireplace('LIMIT :limit', '', $query);
+                        continue;
+                    }
+
+                    if ($k == 'offset') {
+                        $query = str_ireplace('OFFSET :offset', '', $query);
+                        continue;
+                    }
+
                     if (!is_numeric($v)) {
                         $v = '"' . $v . '"'; 
                     }
+
                     $query = str_replace(':' . $k, $v, $query);
                 } 
             }
