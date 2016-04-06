@@ -2,6 +2,9 @@
 
 A bridge between [Idiorm](https://github.com/j4mie/idiorm) ORM and the popular [DataTables](https://datatables.net) javascript library that aims to abstract some of the pain points in mapping your database data to the JSON data DataTables expects.
 
+> Working code example here:
+https://github.com/tegansnyder/idiorm-datatable-json-bridge-example
+
 ---------------
 
 ### Installation
